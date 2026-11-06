@@ -4,7 +4,7 @@
 
 [![Interactive case study](docs/assets/preview.gif)](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)
 
-[**▶️ Launch Live Demo**](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/) · [**📄 Read the Case Study**](docs/)
+[**▶️ Launch Live Demo**](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/) · [**📄 Read the Case Study**](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)
 
 > A dark-mode, static walkthrough of the full lifecycle: `terraform apply` → Dataproc cluster → SparkPi job → GKE-style `kubectl` checks → `terraform destroy`. No GCP resources are created and nothing is billed.
 
