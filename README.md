@@ -8,6 +8,9 @@
 [![GitHub Pages](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/pages.yml/badge.svg)](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)
 [![Terraform](https://img.shields.io/badge/Terraform-1.5%2B-7B42BC?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Dataproc-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/dataproc)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+**👤 Author:** [Ongun Akay](https://ongunakay.com) — Cloud Engineer · Google Cloud · AI/LLM · GKE & Cloud Run
 
 A production-minded reference project that provisions **Managed Service for Apache Spark** (formerly **Google Cloud Dataproc**) on Google Cloud with **Terraform**, and submits a Spark job using a small, repeatable shell script.
 
@@ -35,6 +38,7 @@ The project follows the official Google Cloud quickstart: create a Dataproc clus
 - [Cost considerations](#cost-considerations)
 - [Cleanup](#cleanup)
 - [Troubleshooting](#troubleshooting)
+- [Author](#author)
 - [License](#license)
 
 ---
@@ -160,6 +164,7 @@ The service account binding is created by the `google_project_iam_member.datapro
 ├── .pre-commit-config.yaml       # Terraform, linting, and secret hooks
 ├── .tflint.hcl                   # Shared TFLint configuration
 ├── .gitignore
+├── LICENSE                       # MIT License
 └── README.md
 ```
 
@@ -488,6 +493,23 @@ gcloud services disable dataproc.googleapis.com compute.googleapis.com iam.googl
 
 ---
 
+## Author
+
+**👤 Ongun Akay** — Cloud Engineer · Google Cloud · AI/LLM · GKE & Cloud Run
+
+Cloud engineer with 14+ years of experience in system design and frontend engineering, building scalable applications on Google Cloud.
+
+| Connect | Profile |
+| --- | --- |
+| 🌐 Website | [ongunakay.com](https://ongunakay.com) |
+| 💻 GitHub | [@ongunakaycom](https://github.com/ongunakaycom) |
+| 💼 LinkedIn | [in/ongunakay](https://www.linkedin.com/in/ongunakay/) |
+| ✉️ Email | [info@ongunakay.com](mailto:info@ongunakay.com) |
+
 ## License
 
-This project is provided for educational and portfolio purposes. Use it at your own risk and review the configuration before applying it to a production project.
+Released under the **MIT License** — see [LICENSE](LICENSE) for the full text.
+
+Copyright © 2026 [Ongun Akay](https://ongunakay.com).
+
+You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of this project, provided the copyright notice and permission notice are included. The software is provided **"as is"**, without warranty of any kind.

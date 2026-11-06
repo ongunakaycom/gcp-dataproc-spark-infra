@@ -269,7 +269,7 @@
     }
 
     output.innerHTML = "";
-    appendLine("# Ready when you are. Press “Simülasyonu Başlat”.", "term-comment");
+    appendLine("# Ready when you are. Press “Run simulation”.", "term-comment");
     appendPromptLine();
     updateProgress(0);
   }
@@ -355,7 +355,7 @@
       startButton.removeAttribute("aria-busy");
     }
     if (startLabel) {
-      startLabel.textContent = "Yeniden Çalıştır";
+      startLabel.textContent = "Run again";
     }
     if (announcer) {
       announcer.textContent =
@@ -383,7 +383,7 @@
       startButton.setAttribute("aria-busy", "true");
     }
     if (startLabel) {
-      startLabel.textContent = "Çalışıyor...";
+      startLabel.textContent = "Running...";
     }
     if (announcer) {
       announcer.textContent = "Simulation started.";
@@ -440,7 +440,7 @@
       startButton.removeAttribute("aria-busy");
     }
     if (startLabel) {
-      startLabel.textContent = "Simülasyonu Başlat";
+      startLabel.textContent = "Run simulation";
     }
     if (announcer && announce) {
       announcer.textContent = "Simulation reset. Ready to run again.";

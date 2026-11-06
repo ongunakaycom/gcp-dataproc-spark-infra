@@ -1500,6 +1500,42 @@ h2 {
   text-underline-offset: 3px;
 }
 
+.footer-profile {
+  margin-left: auto;
+  text-align: right;
+}
+
+.footer-profile > p:first-child {
+  color: #cbd5e1;
+  font-size: 0.76rem;
+}
+
+.footer-profile strong {
+  color: #e2e8f0;
+  font-weight: 650;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+}
+
+.footer-links span {
+  color: #334155;
+}
+
+.footer-links a {
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
 .footer-disclaimer {
   width: 100%;
   padding-top: 8px;
@@ -1817,6 +1853,15 @@ h2 {
 
   .design-note-mark {
     display: none;
+  }
+
+  .footer-profile {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .footer-links {
+    justify-content: flex-start;
   }
 
   .stack-grid {
