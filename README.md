@@ -568,6 +568,4 @@ Cloud engineer with 14+ years of experience in system design and frontend engine
 
 Released under the **MIT License** — see [LICENSE](LICENSE) for the full text.
 
-Copyright © 2026 [Ongun Akay](https://ongunakay.com).
-
-You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of this project, provided the copyright notice and permission notice are included. The software is provided **"as is"**, without warranty of any kind.
+Copyright © 2026 [Ongun Akay](https://ongunakay.com)
