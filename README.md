@@ -1,6 +1,11 @@
 # GCP Dataproc Spark Infrastructure
 
+> **🔴 Live case study:** **[Launch the interactive simulation →](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)**
+>
+> A dark-mode, static walkthrough of the full lifecycle: `terraform apply` → Dataproc cluster → SparkPi job → GKE-style `kubectl` checks → `terraform destroy`. No GCP resources are created and nothing is billed.
+
 [![Terraform CI](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/terraform-ci.yml/badge.svg)](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/terraform-ci.yml)
+[![GitHub Pages](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/pages.yml/badge.svg)](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)
 [![Terraform](https://img.shields.io/badge/Terraform-1.5%2B-7B42BC?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Dataproc-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/dataproc)
 
@@ -13,6 +18,7 @@ The project follows the official Google Cloud quickstart: create a Dataproc clus
 ## Table of contents
 
 - [Overview](#overview)
+- [Interactive case study](#interactive-case-study)
 - [Architecture](#architecture)
 - [Google Cloud services](#google-cloud-services)
 - [IAM roles](#iam-roles)
@@ -45,6 +51,31 @@ This repository demonstrates how to:
 - Tear everything down with `terraform destroy`.
 
 The workload is intentionally small: one master node and two workers of type `e2-standard-4`, with an idle-deletion policy of two hours as a safety net.
+
+## Interactive case study
+
+Because this portfolio project has no billing account, the repository also ships a fully static case study in [`docs/`](docs/) that is deployed to GitHub Pages:
+
+**https://ongunakaycom.github.io/gcp-dataproc-spark-infra/**
+
+The page includes:
+
+- A dark-mode landing page with the project's objective, constraints and outcomes.
+- An interactive CSS/SVG architecture diagram (Terraform → GCP APIs & IAM → Dataproc → SparkPi).
+- A typewriter terminal simulation that replays `terraform apply`, `gcloud dataproc jobs submit spark`, GKE-style `kubectl` checks and `terraform destroy`.
+- Tech-stack cards for Terraform, Google Cloud, Spark, GitHub Actions, Kubernetes and Cloud Storage.
+
+Everything is client-side HTML, CSS and JavaScript — no backend, no credentials, no cloud spend. The terminal is a scripted animation, not a command runner.
+
+Preview locally:
+
+```bash
+python -m http.server 8000 --directory docs
+# open http://localhost:8000/
+# optional: http://localhost:8000/#simulate auto-starts the simulation
+```
+
+Deployment is handled by [`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every push to `main`. Enable **Settings → Pages → Source: GitHub Actions** once for the repository.
 
 ## Architecture
 
@@ -111,7 +142,14 @@ The service account binding is created by the `google_project_iam_member.datapro
 .
 ├── .github/
 │   └── workflows/
-│       └── terraform-ci.yml      # fmt, validate, tflint, security, plan
+│       ├── terraform-ci.yml      # fmt, validate, tflint, security, plan
+│       └── pages.yml             # Deploys docs/ to GitHub Pages
+├── docs/                         # Static interactive case study (Pages)
+│   ├── index.html
+│   ├── styles.css
+│   ├── script.js
+│   ├── favicon.svg
+│   └── assets/icons/
 ├── scripts/
 │   └── submit_spark_pi.sh        # Submits the SparkPi job via gcloud
 ├── terraform/
@@ -213,6 +251,10 @@ The Workload Identity Federation authentication block and the real
 `terraform plan` command are included in the workflow as commented-out code.
 This keeps the production shape visible without requiring secrets to be present
 for contributors and forks.
+
+The separate [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+workflow publishes the static case study in `docs/` to GitHub Pages on every
+push to `main`.
 
 ## Enabling live plans with Workload Identity Federation
 

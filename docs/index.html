@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dataproc Spark Infrastructure — Interactive Case Study</title>
+  <meta name="description" content="A Terraform-provisioned Dataproc cluster, secured with least-privilege IAM and validated by CI. Replayed as an interactive browser simulation with zero cloud spend.">
+  <meta name="theme-color" content="#070b12">
+  <meta name="color-scheme" content="dark">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Dataproc Spark Infrastructure — Interactive Case Study">
+  <meta property="og:description" content="Managed Spark on GCP, engineered end to end. Terraform, IAM, Dataproc and a SparkPi job — simulated in your browser with no billing account.">
+  <meta property="og:url" content="https://ongunakaycom.github.io/gcp-dataproc-spark-infra/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Dataproc Spark Infrastructure — Interactive Case Study">
+  <meta name="twitter:description" content="A production-minded GCP Dataproc project, replayed as a zero-cost browser simulation.">
+
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>document.documentElement.classList.add('js');</script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#top" aria-label="dataproc.lab home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 2 5 14h5.2L9 22l9.5-12h-5.2L14.5 2Z" fill="currentColor"/></svg>
+        </span>
+        <span class="brand-name">dataproc<span class="brand-dot">.</span>lab</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#simulation">Simulation</a>
+        <a href="#stack">Stack</a>
+        <a class="nav-cta" href="https://github.com/ongunakaycom/gcp-dataproc-spark-infra" target="_blank" rel="noopener noreferrer">
+          GitHub
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- =====================================================================
+         Hero
+    ====================================================================== -->
+    <section class="hero" id="top">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            Case study · Cloud data platform
+          </span>
+
+          <h1>Managed Spark on GCP, <span class="gradient-text">engineered end to end.</span></h1>
+
+          <p class="lede">
+            A Terraform-provisioned Dataproc cluster with least-privilege IAM, a lifecycle-managed
+            staging bucket and a security-gated CI pipeline — replayed as an interactive browser
+            simulation. No billing account. No live resources. Just the engineering.
+          </p>
+
+          <div class="hero-actions">
+            <button class="btn btn-primary" type="button" data-start-simulation>
+              Simülasyonu Başlat
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <a class="btn btn-ghost" href="#architecture">
+              Explore the architecture
+            </a>
+          </div>
+
+          <dl class="hero-stats">
+            <div>
+              <dt>Cloud spend</dt>
+              <dd>$0.00</dd>
+            </div>
+            <div>
+              <dt>Resources</dt>
+              <dd>6 simulated</dd>
+            </div>
+            <div>
+              <dt>CI checks</dt>
+              <dd>6/6 green</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-panel">
+          <div class="panel-window">
+            <div class="panel-bar">
+              <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="panel-title">cluster.status</span>
+              <span class="badge-live"><span aria-hidden="true"></span>RUNNING</span>
+            </div>
+
+            <div class="cluster-card">
+              <div class="cluster-head">
+                <div>
+                  <span class="mini-label">Dataproc cluster</span>
+                  <h2>example-cluster</h2>
+                </div>
+                <span class="region-tag">us-east1</span>
+              </div>
+
+              <div class="cluster-rows">
+                <div class="cluster-row">
+                  <span>Master</span>
+                  <strong>e2-standard-4 × 1</strong>
+                </div>
+                <div class="cluster-row">
+                  <span>Workers</span>
+                  <strong>e2-standard-4 × 2</strong>
+                </div>
+                <div class="cluster-row">
+                  <span>Image</span>
+                  <strong>2.2-debian12</strong>
+                </div>
+                <div class="cluster-row">
+                  <span>Worker IAM</span>
+                  <strong class="ok"><span class="tiny-check" aria-hidden="true">✓</span> roles/dataproc.worker</strong>
+                </div>
+                <div class="cluster-row">
+                  <span>Idle TTL</span>
+                  <strong>7200 s</strong>
+                </div>
+              </div>
+
+              <div class="job-progress">
+                <div class="job-progress-head">
+                  <span>SparkPi · 1000 tasks</span>
+                  <span class="ok">SUCCEEDED</span>
+                </div>
+                <div class="progress-track" aria-hidden="true"><span></span></div>
+              </div>
+
+              <div class="panel-output" aria-hidden="true">
+                <div><span class="prompt">$</span> gcloud dataproc jobs submit spark …</div>
+                <div class="cyan">Pi is roughly 3.141591</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="float-chip chip-one" aria-hidden="true">
+            <span class="chip-dot"></span> IAM least privilege
+          </div>
+          <div class="float-chip chip-two" aria-hidden="true">
+            <span class="chip-dot violet"></span> Pi ≈ 3.14159
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         Overview
+    ====================================================================== -->
+    <section class="section" id="overview">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">The case study</span>
+          <h2>One quickstart, rebuilt like production.</h2>
+          <p>
+            Google's Dataproc quickstart is a few console clicks. This project turns the same
+            outcome into reviewable infrastructure — then proves the story without spending a cent.
+          </p>
+        </div>
+
+        <div class="overview-grid">
+          <article class="info-card reveal">
+            <span class="card-index">01</span>
+            <h3>The brief</h3>
+            <p>
+              Codify the official Dataproc quickstart: enable the APIs, grant the default compute
+              service account the Dataproc Worker role, create <code>example-cluster</code> and run
+              the bundled SparkPi example.
+            </p>
+          </article>
+
+          <article class="info-card reveal">
+            <span class="card-index">02</span>
+            <h3>The constraint</h3>
+            <p>
+              No billing account and no live project. Every claim had to stay reproducible from a
+              clean clone — which makes static validation, security scanning and this simulation
+              part of the deliverable.
+            </p>
+          </article>
+
+          <article class="info-card reveal">
+            <span class="card-index">03</span>
+            <h3>The outcome</h3>
+            <p>
+              A validated Terraform module, an IAM binding that prevents a classic first-run
+              failure, six green CI checks and a self-contained case study you can replay below.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         Architecture
+    ====================================================================== -->
+    <section class="section" id="architecture">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Architecture</span>
+          <h2>One flow, four trust boundaries.</h2>
+          <p>
+            From HCL to a running Spark driver. Select any stage to see the engineering decision
+            behind it.
+          </p>
+        </div>
+
+        <div class="arch-shell reveal">
+          <div class="arch-flow" role="group" aria-label="Architecture flow from Terraform to Spark">
+            <button class="arch-node is-active" type="button" data-node="terraform" aria-pressed="true">
+              <span class="arch-icon"><img src="assets/icons/terraform.svg" alt="" width="30" height="30"></span>
+              <span class="arch-label">Terraform</span>
+              <span class="arch-sub">plan · apply</span>
+            </button>
+
+            <span class="arch-link" aria-hidden="true" data-link-label="apply"></span>
+
+            <button class="arch-node" type="button" data-node="gcp" aria-pressed="false">
+              <span class="arch-icon"><img src="assets/icons/googlecloud.svg" alt="" width="30" height="30"></span>
+              <span class="arch-label">GCP APIs &amp; IAM</span>
+              <span class="arch-sub">enable · bind</span>
+            </button>
+
+            <span class="arch-link" aria-hidden="true" data-link-label="provision"></span>
+
+            <button class="arch-node" type="button" data-node="dataproc" aria-pressed="false">
+              <span class="arch-icon"><img src="assets/icons/apachespark.svg" alt="" width="30" height="30"></span>
+              <span class="arch-label">Dataproc</span>
+              <span class="arch-sub">managed Spark</span>
+            </button>
+
+            <span class="arch-link" aria-hidden="true" data-link-label="submit"></span>
+
+            <button class="arch-node" type="button" data-node="spark" aria-pressed="false">
+              <span class="arch-icon"><img src="assets/icons/spark-job.svg" alt="" width="30" height="30"></span>
+              <span class="arch-label">SparkPi job</span>
+              <span class="arch-sub">1,000 tasks</span>
+            </button>
+          </div>
+
+          <div class="arch-detail swap" id="arch-detail" aria-live="polite">
+            <div class="arch-detail-head">
+              <span class="arch-kicker">Infrastructure as code</span>
+              <h3>Terraform — declarative foundation</h3>
+            </div>
+            <p>
+              A single apply enables three APIs, derives the Compute Engine default service account
+              from the project number, binds <code>roles/dataproc.worker</code>, creates a
+              lifecycle-managed staging bucket and provisions the cluster. No console clicks, no
+              drift.
+            </p>
+            <div class="chip-row">
+              <span class="chip">hashicorp/google 6.x</span>
+              <span class="chip">idempotent</span>
+              <span class="chip">remote-state ready</span>
+            </div>
+            <code class="arch-code">terraform apply -auto-approve</code>
+          </div>
+
+          <p class="arch-hint">
+            <span aria-hidden="true">↳</span> Click a stage to inspect it. The full source lives in
+            <a href="https://github.com/ongunakaycom/gcp-dataproc-spark-infra/tree/main/terraform" target="_blank" rel="noopener noreferrer">terraform/</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         Simulation
+    ====================================================================== -->
+    <section class="section" id="simulation">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Interactive simulation</span>
+          <h2>Replay the whole lifecycle.</h2>
+          <p>
+            A deterministic, typewriter-driven run from <code>terraform init</code> to
+            <code>terraform destroy</code>. Commands are illustrative; nothing leaves your browser.
+          </p>
+        </div>
+
+        <div class="sim-grid">
+          <div class="sim-copy reveal">
+            <ul class="check-list">
+              <li><span aria-hidden="true">✓</span> 3 APIs enabled, IAM bound, cluster created</li>
+              <li><span aria-hidden="true">✓</span> SparkPi submitted with the documented flags</li>
+              <li><span aria-hidden="true">✓</span> GKE-style pod and driver-log inspection</li>
+              <li><span aria-hidden="true">✓</span> Terraform destroy proves zero leftover resources</li>
+            </ul>
+
+            <div class="sim-actions">
+              <button class="btn btn-primary" type="button" id="start-simulation">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 5.5v13l11-6.5-11-6.5Z" fill="currentColor"/></svg>
+                <span id="start-label">Simülasyonu Başlat</span>
+              </button>
+              <button class="btn btn-quiet" type="button" id="reset-simulation">Reset</button>
+            </div>
+
+            <p class="sim-note">
+              Expected duration: ~15 seconds. This is a static simulation — no <code>gcloud</code>
+              or <code>terraform</code> process is executed.
+            </p>
+
+            <div class="sim-metrics">
+              <div><span>Resources</span><strong>6</strong></div>
+              <div><span>Destroyed</span><strong>6</strong></div>
+              <div><span>Leaked</span><strong class="ok">0</strong></div>
+            </div>
+          </div>
+
+          <div class="terminal reveal" id="terminal" data-state="idle">
+            <div class="terminal-bar">
+              <span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="terminal-title">ongun@cloud — bash · dataproc-lab</span>
+              <span class="term-meta">
+                <span class="status"><span class="status-dot" aria-hidden="true"></span><span id="term-status">idle</span></span>
+                <span class="term-timer" id="term-timer">00:00</span>
+              </span>
+            </div>
+            <div class="term-progress" aria-hidden="true"><span id="term-progress-bar"></span></div>
+            <div class="term-body" id="terminal-output" role="log" aria-live="off" aria-label="Simulated terminal output">
+              <div class="term-line term-comment"># Ready when you are. Press “Simülasyonu Başlat”.</div>
+              <div class="term-line">
+                <span class="term-prompt">ongun@cloud:~$</span>
+                <span class="term-cursor" aria-hidden="true"></span>
+              </div>
+            </div>
+            <div class="terminal-foot">
+              <span>UTF-8</span>
+              <span>bash</span>
+              <span>100% simulated</span>
+            </div>
+          </div>
+          <p class="sr-only" id="sim-announcer" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         Tech stack
+    ====================================================================== -->
+    <section class="section" id="stack">
+      <div class="container">
+        <div class="section-head reveal">
+          <span class="eyebrow">Tech stack</span>
+          <h2>Small surface area. Sharp tools.</h2>
+          <p>
+            Each tool earns its place: infrastructure, cloud primitives, the workload, the quality
+            gates and the operational view.
+          </p>
+        </div>
+
+        <div class="stack-grid">
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/terraform.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>Terraform</h3>
+              <p>Declarative infrastructure with a pinned provider lockfile, input validation and clean teardown.</p>
+            </div>
+            <span class="stack-tag">IaC</span>
+          </article>
+
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/googlecloud.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>Google Cloud</h3>
+              <p>Dataproc, IAM, Compute Engine and Cloud Storage APIs enabled from a single configuration.</p>
+            </div>
+            <span class="stack-tag">Cloud</span>
+          </article>
+
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/apachespark.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>Apache Spark</h3>
+              <p>SparkPi executed through Dataproc's submit API with the bundled examples JAR and 1,000 tasks.</p>
+            </div>
+            <span class="stack-tag">Compute</span>
+          </article>
+
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/githubactions.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>GitHub Actions</h3>
+              <p>fmt, validate, TFLint, Checkov, tfsec and Gitleaks — plus this Pages deployment.</p>
+            </div>
+            <span class="stack-tag">CI/CD</span>
+          </article>
+
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/kubernetes.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>Kubernetes</h3>
+              <p>GKE-style pod and log inspection shows how the same driver image is observed in a cluster.</p>
+            </div>
+            <span class="stack-tag">Runtime</span>
+          </article>
+
+          <article class="stack-card reveal">
+            <span class="stack-icon"><img src="assets/icons/storage.svg" alt="" width="34" height="34" loading="lazy"></span>
+            <div>
+              <h3>Cloud Storage</h3>
+              <p>Terraform-managed staging bucket with a seven-day lifecycle rule and force-destroy cleanup.</p>
+            </div>
+            <span class="stack-tag">Storage</span>
+          </article>
+        </div>
+
+        <div class="design-note reveal">
+          <span class="design-note-mark" aria-hidden="true">“</span>
+          <p>
+            The interesting part is not the cluster. It is the guard rails around it: one IAM binding
+            that prevents a first-run failure, one idle TTL that caps cost, and one pipeline that
+            refuses to merge unvalidated HCL.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         Repository CTA
+    ====================================================================== -->
+    <section class="cta-section">
+      <div class="container cta-inner reveal">
+        <div>
+          <span class="eyebrow">Source of truth</span>
+          <h2>Read the code, not just the story.</h2>
+          <p>Terraform, the Spark submission script, the CI pipeline and this page are all in one public repository.</p>
+        </div>
+        <div class="cta-actions">
+          <a class="btn btn-primary" href="https://github.com/ongunakaycom/gcp-dataproc-spark-infra" target="_blank" rel="noopener noreferrer">
+            View on GitHub
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/ongunakaycom/gcp-dataproc-spark-infra/blob/main/README.md" target="_blank" rel="noopener noreferrer">Read the README</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-mark small" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 2 5 14h5.2L9 22l9.5-12h-5.2L14.5 2Z" fill="currentColor"/></svg>
+        </span>
+        <span>dataproc.lab</span>
+      </div>
+      <p>Built by <a href="https://github.com/ongunakaycom" target="_blank" rel="noopener noreferrer">Ongun Akay</a> · Cloud &amp; data engineering portfolio.</p>
+      <p class="footer-disclaimer">
+        Static simulation only. No Google Cloud resources are created and no billing occurs.
+        © <span id="year"></span>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>
