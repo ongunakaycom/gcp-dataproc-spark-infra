@@ -9,6 +9,8 @@ name: Terraform CI
 #   tflint      - TFLint with the Terraform and Google rulesets
 #   security    - Checkov and tfsec static analysis
 #   secret-scan - Gitleaks secret detection
+#   destructive - warns when a change deletes resources (static diff, or a
+#                 live plan when Workload Identity Federation is configured)
 #   plan        - syntax-only "plan" stage (no live GCP credentials)
 #
 # Live GCP access is intentionally disabled. See the commented Workload
@@ -134,6 +136,105 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  destructive-change:
+    name: Destructive Change Guard
+    runs-on: ubuntu-latest
+    needs: [format, validate]
+    env:
+      # Empty unless Workload Identity Federation is configured.
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Without credentials there is no live plan to inspect, so the guard
+      # falls back to the diff: removed resource/module blocks and changes to
+      # destroy-related settings are surfaced as warnings.
+      - name: Detect destructive changes (static diff)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "${GCP_PROJECT_ID:-}" ]; then
+            echo "GCP credentials are configured; the live plan guard below is authoritative."
+            exit 0
+          fi
+
+          base="${BASE_SHA:-}"
+          if [ -z "$base" ] || ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            base="$(git rev-list --max-count=1 --skip=1 HEAD 2>/dev/null || true)"
+          fi
+
+          if [ -z "$base" ]; then
+            echo "No previous commit to compare against; skipping the static guard."
+            exit 0
+          fi
+
+          diff="$(git diff --unified=0 "$base" HEAD -- terraform || true)"
+          removed="$(printf '%s\n' "$diff" | grep -E '^-(resource|module) ' || true)"
+          risky="$(printf '%s\n' "$diff" | grep -E '^[+-].*(force_destroy|deletion_protection)' || true)"
+
+          {
+            echo "### Destructive change guard (static diff)"
+            echo ""
+            if [ -n "$removed" ] || [ -n "$risky" ]; then
+              echo "Potential destructive Terraform change detected — review the plan before applying."
+              echo ""
+              echo '```diff'
+              printf '%s\n%s\n' "$removed" "$risky" | sed '/^$/d'
+              echo '```'
+            else
+              echo "No resource deletions or destroy-related changes detected."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$removed" ] || [ -n "$risky" ]; then
+            echo "::warning::Potential destructive Terraform change detected — review the plan before applying."
+          fi
+
+      - name: Set up Terraform
+        if: env.GCP_PROJECT_ID != ''
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Authenticate to Google Cloud
+        if: env.GCP_PROJECT_ID != ''
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          create_credentials_file: true
+
+      - name: Terraform plan and scan for destroys
+        if: env.GCP_PROJECT_ID != ''
+        working-directory: terraform
+        run: |
+          set -euo pipefail
+
+          terraform init -input=false -no-color
+
+          set +e
+          terraform plan \
+            -input=false \
+            -no-color \
+            -lock=false \
+            -var="project_id=${GCP_PROJECT_ID}" \
+            -out=tfplan
+          status=$?
+          set -e
+
+          if [ "$status" -eq 1 ]; then
+            echo "::error::terraform plan failed"
+            exit 1
+          fi
+
+          terraform show -json tfplan > plan.json
+          python3 ../scripts/check_plan_destroys.py plan.json
 
   plan:
     name: Terraform Plan (syntax-only)

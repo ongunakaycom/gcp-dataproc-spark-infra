@@ -1,7 +1,11 @@
 # GCP Dataproc Spark Infrastructure
 
-> **🔴 Live case study:** **[Launch the interactive simulation →](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)**
->
+**Terraform-provisioned Dataproc on Google Cloud — least-privilege IAM, a security-gated CI pipeline, and a zero-cost interactive case study.**
+
+[![Interactive case study](docs/assets/preview.gif)](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/)
+
+[**▶️ Launch Live Demo**](https://ongunakaycom.github.io/gcp-dataproc-spark-infra/) · [**📄 Read the Case Study**](docs/)
+
 > A dark-mode, static walkthrough of the full lifecycle: `terraform apply` → Dataproc cluster → SparkPi job → GKE-style `kubectl` checks → `terraform destroy`. No GCP resources are created and nothing is billed.
 
 [![Terraform CI](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/terraform-ci.yml/badge.svg)](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/actions/workflows/terraform-ci.yml)
@@ -9,6 +13,7 @@
 [![Terraform](https://img.shields.io/badge/Terraform-1.5%2B-7B42BC?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 [![Google Cloud](https://img.shields.io/badge/Google%20Cloud-Dataproc-4285F4?logo=googlecloud&logoColor=white)](https://cloud.google.com/dataproc)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/ongunakaycom/gcp-dataproc-spark-infra?sort=semver)](https://github.com/ongunakaycom/gcp-dataproc-spark-infra/releases)
 
 **👤 Author:** [Ongun Akay](https://ongunakay.com) — Cloud Engineer · Google Cloud · AI/LLM · GKE & Cloud Run
 
@@ -21,6 +26,7 @@ The project follows the official Google Cloud quickstart: create a Dataproc clus
 ## Table of contents
 
 - [Overview](#overview)
+- [Why this project exists](#why-this-project-exists)
 - [Interactive case study](#interactive-case-study)
 - [Architecture](#architecture)
 - [Google Cloud services](#google-cloud-services)
@@ -55,6 +61,13 @@ This repository demonstrates how to:
 - Tear everything down with `terraform destroy`.
 
 The workload is intentionally small: one master node and two workers of type `e2-standard-4`, with an idle-deletion policy of two hours as a safety net.
+
+## Why this project exists
+
+- **The quickstart is a click-through; production is not.** The IAM binding, lifecycle rules, and teardown path are the parts that break first.
+- **The guard rails are the deliverable.** One binding prevents a first-run failure, one idle TTL caps spend, and one pipeline refuses unvalidated HCL.
+- **No billing account, no excuses.** Every claim stays reviewable from a clean clone through static analysis and a browser simulation.
+- **Built to be read.** The case study lives in this repository as real HTML, CSS, and JavaScript — not a slide deck.
 
 ## Interactive case study
 
@@ -145,17 +158,22 @@ The service account binding is created by the `google_project_iam_member.datapro
 ```
 .
 ├── .github/
+│   ├── dependabot.yml            # Weekly Terraform + Actions updates
 │   └── workflows/
-│       ├── terraform-ci.yml      # fmt, validate, tflint, security, plan
+│       ├── terraform-ci.yml      # fmt, validate, tflint, security, guard, plan
 │       └── pages.yml             # Deploys docs/ to GitHub Pages
 ├── docs/                         # Static interactive case study (Pages)
 │   ├── index.html
 │   ├── styles.css
 │   ├── script.js
 │   ├── favicon.svg
-│   └── assets/icons/
+│   └── assets/
+│       ├── preview.gif           # README / social preview animation
+│       ├── social-preview.png    # 1280×640 social card
+│       └── icons/
 ├── scripts/
-│   └── submit_spark_pi.sh        # Submits the SparkPi job via gcloud
+│   ├── submit_spark_pi.sh        # Submits the SparkPi job via gcloud
+│   └── check_plan_destroys.py    # Summarises destructive plan changes
 ├── terraform/
 │   ├── main.tf                   # Provider, APIs, IAM, bucket, cluster
 │   ├── variables.tf              # Input variables and validation
@@ -196,13 +214,26 @@ gcloud config set project YOUR_PROJECT_ID
    cp terraform.tfvars.example terraform.tfvars
    ```
 
+   The complete [`terraform/terraform.tfvars.example`](terraform/terraform.tfvars.example) looks like this:
+
    ```hcl
+   # Copy this file to terraform.tfvars and adjust the values.
+   # terraform.tfvars is ignored by Git because it is environment specific.
+
    project_id = "your-gcp-project-id"
-   region     = "us-east1"   # or "europe-west1"
-   zone       = "us-east1-b" # optional; must be in the selected region
+   region     = "us-east1"
+   zone       = "us-east1-b"
+
+   # Optional overrides
+   # cluster_name         = "example-cluster"
+   # worker_count         = 2
+   # master_machine_type  = "e2-standard-4"
+   # worker_machine_type  = "e2-standard-4"
+   # image_version        = "2.2-debian12"
+   # idle_delete_ttl      = "7200s"
    ```
 
-   Alternatively, export the project ID:
+   `region` accepts `us-east1` or `europe-west1` (enforced by variable validation), and `zone` must belong to that region. Alternatively, export the project ID:
 
    ```bash
    export TF_VAR_project_id="your-gcp-project-id"
@@ -241,7 +272,19 @@ gcloud config set project YOUR_PROJECT_ID
 | **TFLint** | TFLint + Terraform & Google rulesets | Deprecated syntax, invalid machine types, provider-specific best practices. |
 | **Security Scan** | Checkov + tfsec | Misconfigurations such as public buckets, missing encryption, overly broad IAM. |
 | **Secret Scan** | Gitleaks | Credentials, keys, and tokens accidentally committed to the repository. |
+| **Destructive Change Guard** | Static diff + optional live plan | Warns when a change deletes resources or modules, or edits `force_destroy` / `deletion_protection`. |
 | **Terraform Plan** | `terraform validate` (syntax-only) | Configuration is re-validated; a live plan is gated behind WIF credentials. |
+
+### What CI deliberately does not do
+
+- **It never runs `terraform apply`.** Provisioning stays a reviewed, human-triggered action.
+- **It holds no Google Cloud credentials by default.** Live plans are opt-in through Workload Identity Federation.
+- **It does not enforce zero findings.** Checkov and tfsec run in soft-fail mode so forks and contributors are not blocked — flip `soft_fail` to `false` for a strict gate.
+
+The destructive change guard follows the same principle: with no credentials it reads the
+pull-request diff and warns when resource or module blocks are removed; when Workload
+Identity Federation is configured it runs a real `terraform plan` and reports every
+resource in the `delete` action.
 
 ### Why the plan stage is syntax-only
 
@@ -262,6 +305,9 @@ workflow publishes the static case study in `docs/` to GitHub Pages on every
 push to `main`.
 
 ## Enabling live plans with Workload Identity Federation
+
+<details>
+<summary><strong>Show the WIF bootstrap steps and repository secrets</strong></summary>
 
 The recommended production setup avoids long-lived service account keys by
 using GitHub's OIDC token with [Workload Identity Federation](https://cloud.google.com/iam/docs/workload-identity-federation).
@@ -326,6 +372,8 @@ Then, in `.github/workflows/terraform-ci.yml`:
 The workflow deliberately does **not** run `terraform apply`. Infrastructure
 changes are applied manually after review, which keeps production credentials
 out of automatic deployment paths.
+
+</details>
 
 ## Code quality and security
 
@@ -426,6 +474,9 @@ Cluster and job details, including the Spark UI link and Cloud Logging output, a
 
 ## Configuration reference
 
+<details>
+<summary><strong>Show variables and outputs</strong></summary>
+
 | Variable | Type | Default | Description |
 | --- | --- | --- | --- |
 | `project_id` | `string` | — (required) | Google Cloud project ID. |
@@ -448,14 +499,16 @@ Outputs:
 | `default_compute_service_account` | Service account granted `roles/dataproc.worker`. |
 | `submit_job_command` | Complete `gcloud dataproc jobs submit spark` command. |
 
+</details>
+
 ## Cost considerations
 
-A running Dataproc cluster bills for:
-
-- **Compute Engine instances** — one master and two workers by default. Approximate cost is around **$0.40 per hour** for three `e2-standard-4` instances in `us-east1`; check the [Compute Engine pricing page](https://cloud.google.com/compute/pricing) for current rates.
-- **Persistent disk** — 100 GB standard PD per node (300 GB total), billed monthly even while the cluster is idle.
-- **Cloud Storage** — a few cents per month for staging data and logs.
-- **Dataproc service fee** — none for clusters using the standard image; you pay only for the underlying resources.
+| Cost driver | Approximate cost | Notes |
+| --- | --- | --- |
+| **Compute Engine instances** | ~**$0.40 / hour** | One `e2-standard-4` master and two workers in `us-east1`. Check the [Compute Engine pricing page](https://cloud.google.com/compute/pricing) for current rates. |
+| **Persistent disk** | ~$0.04 / GB-month | 100 GB standard PD per node (300 GB total), billed even while the cluster is idle. |
+| **Cloud Storage** | A few cents / month | Staging data and logs; objects expire after 7 days. |
+| **Dataproc service fee** | **$0.00** | Standard-image clusters bill only for the underlying resources. |
 
 Cost-saving measures built into this project:
 
@@ -480,6 +533,9 @@ gcloud services disable dataproc.googleapis.com compute.googleapis.com iam.googl
 
 ## Troubleshooting
 
+<details>
+<summary><strong>Show common failures and fixes</strong></summary>
+
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `PERMISSION_DENIED: ... does not have storage.objects...` or cluster creation fails immediately after apply | The `roles/dataproc.worker` binding has not propagated yet | Wait 1–2 minutes and re-run `terraform apply`, or recreate the cluster. |
@@ -490,6 +546,8 @@ gcloud services disable dataproc.googleapis.com compute.googleapis.com iam.googl
 | `gcloud: command not found` | Cloud SDK is not installed or not on `PATH` | Install the Google Cloud SDK and reopen the terminal. |
 | `./scripts/submit_spark_pi.sh: Permission denied` | Script is not executable | Run `chmod +x scripts/submit_spark_pi.sh`. |
 | Job hangs or cluster reports no workers | Worker quota exhausted in the region | Check quotas in **IAM & Admin → Quotas** and reduce `worker_count`. |
+
+</details>
 
 ---
 

@@ -25,9 +25,15 @@ override.tf.json
 .terraformrc
 terraform.rc
 
-# Saved plan files
+# Saved plan files and generated plan JSON
 *.tfplan
 tfplan
+plan.json
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
 
 # Operating system files
 .DS_Store
