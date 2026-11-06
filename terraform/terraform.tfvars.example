@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and adjust the values.
+# terraform.tfvars is ignored by Git because it is environment specific.
+
+project_id = "your-gcp-project-id"
+region     = "us-east1"
+zone       = "us-east1-b"
+
+# Optional overrides
+# cluster_name         = "example-cluster"
+# worker_count         = 2
+# master_machine_type  = "e2-standard-4"
+# worker_machine_type  = "e2-standard-4"
+# image_version        = "2.2-debian12"
+# idle_delete_ttl      = "7200s"
